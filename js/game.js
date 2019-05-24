@@ -11,3 +11,8 @@ var myGameArea = {
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
     }
 }
+
+$('#login-form').on('submit', function () {
+    $(this).remove();
+    return false;
+});

@@ -5,12 +5,12 @@ html, body {
     text-align: center;
 }
 
-#login-div {
+#login-form {
     display: block;
     margin: auto;
     max-width: 20%;
 }
 
-#login-div form>input {
+#login-form>input {
     text-align: center;
 }
