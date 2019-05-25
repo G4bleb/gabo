@@ -31,7 +31,7 @@ $('#login-form').submit(function (e) {
         players = initial_players;
         console.log(players);
         //TODO Load players
-        $("#player-list").html("Joueurs : " + players.length);
+        $("#player-list").html("Joueurs : " + Object.keys(players).length);
     });
     
 
@@ -41,12 +41,12 @@ $('#login-form').submit(function (e) {
         switch (update[0]) {
             case "player_added":
                 players.push(update[1]);
-                $("#player-list").html("Joueurs : " + players.length);
+                $("#player-list").html("Joueurs : " + Object.keys(players).length);
                 //TODO Load players
                 break;
-            case "player_removed":
+                case "player_removed":
                 players.splice(update[1], 1);
-                $("#player-list").html("Joueurs : " + players.length);
+                $("#player-list").html("Joueurs : " + Object.keys(players).length);
                 //TODO Load players
                 break;
             default:

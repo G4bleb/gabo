@@ -1,4 +1,26 @@
-import cardPossibilities from "js/gamecommon";
+const cardPossibilities = {
+    "ranks": {
+        "2": "Two",
+        "3": "Three",
+        "4": "Four",
+        "5": "Five",
+        "6": "Six",
+        "7": "Seven",
+        "8": "Eight",
+        "9": "Nine",
+        "10": "Ten",
+        "J": "Jack",
+        "Q": "Queen",
+        "K": "King",
+        "A": "Ace"
+    },
+    "suits": {
+        "S": "Spades",
+        "D": "Diamonds",
+        "C": "Clubs",
+        "H": "Hearts"
+    }
+}
 
 class CardHolder{
     constructor(cards) {
@@ -20,6 +42,12 @@ class Deck extends CardHolder{
             this.cards[r] = tmp;
         }
     }
+    draw(){
+        return this.cards.pop();
+    }
+    putOnTop(card){
+        this.cards.push(card);
+    }
 }
 
 class Hand extends CardHolder {
@@ -30,24 +58,40 @@ class Hand extends CardHolder {
 
 class Card{
     constructor(rank, suit){
+        this.revealedTo = -1;
         this.rank = rank;
         this.suit = suit;
     }
-    get value(){
-        return this.value;
+}
+
+class Player{
+    constructor(nickname, hand){
+        this.nickname = nickname;
+        this.hand = hand;
     }
 }
 
-function startGame() {
-    myGameArea.start();
-    var cards = [];
-
-    for (let s in cardPossibilities.suits) {
-        for (let r in cardPossibilities.ranks) {
-            cards.push() = new Card(r, s);
+class Game{
+    constructor(players){
+        this.players = players;
+    }
+    start() {
+        var cards = [];
+        for (let s in cardPossibilities.suits) {
+            for (let r in cardPossibilities.ranks) {
+                cards.push() = new Card(r, s); //Créer les cartes
+            }
         }
+        this.drawingDeck = new Deck(cards);//Créer la pioche
+        this.drawingDeck.shuffle();//Mélanger la pioche
+        this.discardDeck = new Deck([]);//Créer la défausse
+        //Créer les mains
+        
     }
-    drawingDeck = new Deck(cards);
-    drawingDeck.shuffle();
-    //Créer les mains
 }
+
+module.exports.Deck = Deck;
+module.exports.Hand = Hand;
+module.exports.Card = Card;
+module.exports.Player = Player;
+module.exports.Game = Game;

@@ -1,5 +1,6 @@
-var app = require('express')(),
-    express = require('express'),
+var gabo = require('./gameserver')
+var express = require('express'),
+    app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server);
     
@@ -10,33 +11,48 @@ app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
-var players = [];
+var games = {};
+const MAX_NUMBER_OF_GAMES = 2;
+
 io.sockets.on('connection', function (socket) {
     console.log("Connection");
     
     //Lorsqu'un nouveau joueur tente de se connecter
     socket.on('new_player', function (nickname, logincode) {
-        //TODO Tester un code généré auparavant
-        //Si le code est mauvais
-        if(logincode != "AAAA"){
-            console.log("Wrong code");
-            socket.disconnect();
-            return false;
+        //Test du code de connexion
+        console.log(games[logincode]);
+        if (typeof(games[logincode]) === 'undefined') {
+            console.log(Object.keys(games).length);
+            
+            if (Object.keys(games).length < MAX_NUMBER_OF_GAMES) {
+                console.log("Creating a new game");
+                
+                games[logincode] = new gabo.Game({})
+            }else{
+                console.log("Can't create a new game");
+                socket.disconnect();
+                return false;
+            }
         }
-        console.log("New Player");
-
-        players.push(nickname);
+        console.log(games);
+        
+        games[logincode].players[socket.id] = new gabo.Player(nickname, new gabo.Hand([]));
+        console.log("New Player : " + games[logincode].players[socket.id].nickname);
 
         //Gérer la déconnexion
         socket.on('disconnect', function () {
             console.log("Disconnection, lost player");
-            socket.broadcast.emit('update', ["player_removed", nickname]);
-            players.splice(players.indexOf(socket.nickname), 1);
-            console.log(players);
-        })
-        console.log(players);
+            socket.broadcast.emit('update', ["player_removed", socket.id]);
+            delete games[logincode].players[socket.id];
+            console.log(games[logincode].players);
+            if (Object.keys(games[logincode].players).length == 0) {
+                console.log("Deleting game " + logincode);
+                delete games[logincode];
+            }
+        });
+        console.log(games[logincode].players);
         
-        socket.emit('initial_players', players);
+        socket.emit('initial_players', (games[logincode].players));
         socket.broadcast.emit('update', ["player_added", nickname]);
 
     });
@@ -45,6 +61,15 @@ io.sockets.on('connection', function (socket) {
     socket.on('request', function (request, data) {
         console.log("Request");
         //Traiter la requête
+        switch (request) {
+            case "start_game":
+                gabo.start();
+
+                break;
+        
+            default:
+                break;
+        }
     });
 });
 
