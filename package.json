@@ -1,0 +1,15 @@
+{
+  "name": "gabo",
+  "version": "1.0.0",
+  "description": "The gabo game",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "github.com/g4bleb",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.0",
+    "socket.io": "^2.2.0"
+  }
+}
