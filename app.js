@@ -26,7 +26,6 @@ io.sockets.on('connection', function (socket) {
             
             if (Object.keys(games).length < MAX_NUMBER_OF_GAMES) {
                 console.log("Creating a new game");
-                
                 games[logincode] = new gabo.Game({})
             }else{
                 console.log("Can't create a new game");

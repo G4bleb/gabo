@@ -22,6 +22,14 @@ const cardPossibilities = {
     }
 }
 
+class Card {
+    constructor(rank, suit) {
+        this.revealedTo = -1;
+        this.rank = rank;
+        this.suit = suit;
+    }
+}
+
 class CardHolder{
     constructor(cards) {
         this.cards = cards;
@@ -54,13 +62,11 @@ class Hand extends CardHolder {
     constructor(cards) {
         super(cards);
     }
-}
-
-class Card{
-    constructor(rank, suit){
-        this.revealedTo = -1;
-        this.rank = rank;
-        this.suit = suit;
+    addCard(card){
+        cards.unshift(card);
+    }
+    popCard(cardIndex){
+        return cards.splice(cardIndex, 1)[0];
     }
 }
 
@@ -69,6 +75,7 @@ class Player{
         this.nickname = nickname;
         this.hand = hand;
     }
+    
 }
 
 class Game{
@@ -87,6 +94,16 @@ class Game{
         this.discardDeck = new Deck([]);//Créer la défausse
         //Créer les mains
         
+        
+    }
+    swapCard(playerIdSwapping, cardSwappingIndex, playerIdSwapped, cardSwappedIndex){
+        //[cardSwapping, cardSwapped] = [cardSwapped, cardSwapping];
+        var tmp = this.players[playerIdSwapping].hand[cardSwappingIndex];
+        this.players[playerIdSwapping].hand[cardSwappingIndex] = this.players[playerIdSwapped].hand[cardSwappedIndex];;
+        this.players[playerIdSwapped].hand[cardSwappedIndex] = tmp;
+    }
+    showCard(playerIdToShowTo, playerIdToBeShown, cardId){
+        this.players[playerIdToBeShown].hand[cardId].revealedTo = playerIdToShowTo;
     }
 }
 
