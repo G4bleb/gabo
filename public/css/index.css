@@ -14,3 +14,7 @@ html, body {
 #login-form>input {
     text-align: center;
 }
+
+.player{
+    display: inline-block;
+}
