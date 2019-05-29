@@ -26,7 +26,6 @@ const STARTING_HAND_SIZE = 4;
 
 class Card {
     constructor(rank, suit) {
-        this.revealedTo = -1;//Who the card is currently revealed to (-1 : nobody, -2 : everybody, other : the player's id)
         this.rank = rank;
         this.suit = suit;
     }
@@ -89,6 +88,7 @@ class Player{
 class Game{
     constructor(players){
         this.players = players;
+        this.started = false;
     }
     //Start the game
     start() {
@@ -107,7 +107,7 @@ class Game{
                 this.players[playerId].hand.cards[i] = this.drawingDeck.draw();//Draw a card
             }
         }
-        
+        this.started = true;
     }
     //Swaps a card between two players
     swapCard(playerIdSwapping, cardSwappingIndex, playerIdSwapped, cardSwappedIndex){
