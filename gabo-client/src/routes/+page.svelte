@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { io } from 'socket.io-client';
 	import {
-		ResponseCode,
+		ErrorCode,
 		type ClientToServerEvents,
 		type ServerToClientEvents
 	} from '@gabo-common/SocketEvents.js';
@@ -12,15 +12,17 @@
 	export let socketID = '';
 	export let ingame = false;
 	export let nickname = '';
-	export let logincode = '';
+	export let roomcode = '';
 
 	function joinGame() {
-		console.log(nickname, logincode);
-		socket.emit('addPlayer', nickname, logincode, (result: ResponseCode) => {
-			if (result == ResponseCode.Success) {
+		console.log(nickname, roomcode);
+		socket.emit('addPlayer', nickname, roomcode, (result: ErrorCode, message: string) => {
+			if (result == ErrorCode.Success) {
 				ingame = true;
 			} else {
 				console.error('addPlayer was not successfull');
+				console.error(message);
+				ingame = false;
 			}
 		});
 	}
@@ -56,17 +58,17 @@
 			type="text"
 			name="nickname"
 			class=""
-			placeholder="Pseudo"
+			placeholder="Nickname"
 			required
 			bind:value={nickname}
 		/>
 		<input
 			type="text"
-			name="logincode"
+			name="roomcode"
 			class=""
-			placeholder="Code de connexion"
+			placeholder="Room code"
 			required
-			bind:value={logincode}
+			bind:value={roomcode}
 		/>
 		<input type="submit" class="" />
 	</form>

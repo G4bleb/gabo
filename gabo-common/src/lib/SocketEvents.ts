@@ -1,14 +1,16 @@
-export const enum ResponseCode {
+export const enum ErrorCode {
   Success,
   ErrorNoRoomAvailable,
   ErrorNameUnavailable,
+  ErrorAlreadyInGame,
+  ErrorRoomFull,
 }
 
 export interface ServerToClientEvents {
   addPlayer: (
     playerName: string,
     roomName: string,
-    callback: (result: ResponseCode) => void
+    callback: (result: ErrorCode, message: string) => void
   ) => void;
   //player left
   //deck shuffling (play animation)

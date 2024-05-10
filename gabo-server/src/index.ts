@@ -7,9 +7,15 @@ import type {
   InterServerEvents,
   SocketData,
 } from "@gabo-common/SocketEvents.js";
-import { ResponseCode } from "@gabo-common/SocketEvents.js";
+import { ErrorCode } from "@gabo-common/SocketEvents.js";
+import { State } from "./State";
+import { GaboError } from "./GaboError";
+import { Game } from "./GameLogic/Game";
+
+const MAX_ROOMS = 100;
 
 const server = Fastify({ logger: true });
+const state = new State();
 
 // server.get("/ping", async (request, reply) => {
 //   return "pong\n";
@@ -34,15 +40,40 @@ server.ready((err) => {
       (
         playerName: string,
         roomName: string,
-        callback: (result: ResponseCode) => void
+        callback: (result: ErrorCode, message: string) => void
       ) => {
         console.log("received addPlayer ", playerName, roomName);
+        if (sock.data.room !== undefined) {
+          callback(ErrorCode.ErrorAlreadyInGame, "You are already in a game.");
+        }
 
-        //TODO Check if room has player of same name
+        //If the room already exists, add the player to the game
+        if (state.games.has(roomName)) {
+          const game = state.games.get(roomName) as Game;
+          try {
+            game.addPlayer(playerName);
+          } catch (error) {
+            const ge = error as GaboError;
+            callback(ge.code, ge.message);
+          }
+        } else {
+          //The room does not exist
+          //Check if room is createable
+          if (state.games.size >= MAX_ROOMS) {
+            callback(
+              ErrorCode.ErrorNoRoomAvailable,
+              "There is no slot available to create a room."
+            );
+          }
+          const game = new Game();
+          state.games.set(roomName, game);
+          game.addPlayer(playerName);
+        }
         //TODO Check total number of rooms open
+
         sock.join(roomName);
         sock.data.room = roomName;
-        callback(ResponseCode.Success);
+        callback(ErrorCode.Success, "");
       }
     );
 
