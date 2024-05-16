@@ -54,7 +54,7 @@ import svgAH from "$lib/assets/cards/AH.svg";
 import svgBLUE_BACK from "$lib/assets/cards/BLUE_BACK.svg";
 import svgRED_BACK from "$lib/assets/cards/RED_BACK.svg";
 
-export const CardSvgMap = {
+export const CardSvgMap: Record<string, string>= {
     "2S" : svg2S,
 "3S" : svg3S,
 "4S" : svg4S,
