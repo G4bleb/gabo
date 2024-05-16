@@ -6,9 +6,12 @@
 		type ServerToClientEvents
 	} from '@gabo-common/SocketEvents.js';
 	import type { Card } from '$lib/Card.js';
+	import { CardSvgMap } from '$lib/assets/CardSvgMap';
 
 	export const socket = io('ws://127.0.0.1:8080');
-	// export let cards: Card[] = [];
+	export let cards: Card[] = [
+		{value: "KH"}
+	];
 	export let socketID = '';
 	export let ingame = false;
 	export let nickname = '';
@@ -45,11 +48,12 @@
 		<div>
 			<p>ingame</p>
 		</div>
-		<!-- <div id="hand">
+		<div id="hand">
 		{#each cards as card}
 			<div>{card.value}</div>
+			<img src="{CardSvgMap[card.value]}"/>
 		{/each}
-	</div> -->
+	</div>
 	</div>
 {:else}
 	<form id="login-form" on:submit|preventDefault={joinGame}>
@@ -57,7 +61,7 @@
 		<input
 			type="text"
 			name="nickname"
-			class=""
+			class="form-control"
 			placeholder="Nickname"
 			required
 			bind:value={nickname}
@@ -65,12 +69,23 @@
 		<input
 			type="text"
 			name="roomcode"
-			class=""
+			class="form-control"
 			placeholder="Room code"
 			required
 			bind:value={roomcode}
 		/>
-		<input type="submit" class="" />
+		<input type="submit" class="btn btn-lg btn-primary btn-block" />
 	</form>
 {/if}
 <button on:click={sendHello}>send hello</button>
+
+<style>
+#login-form {
+    display: block;
+    margin: auto;
+    max-width: 20%;
+}
+#login-form>input {
+    text-align: center;
+}
+</style>
