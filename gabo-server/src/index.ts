@@ -69,7 +69,6 @@ server.ready((err) => {
           state.games.set(roomName, game);
           game.addPlayer(playerName);
         }
-        //TODO Check total number of rooms open
 
         sock.join(roomName);
         sock.data.room = roomName;
