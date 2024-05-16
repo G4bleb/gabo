@@ -1,4 +1,4 @@
-import { GaboError } from "src/GaboError";
+import { GaboError } from "../GaboError";
 import { Deck } from "./Deck";
 import { Player } from "./Player";
 import { ErrorCode } from "@gabo-common/SocketEvents";
