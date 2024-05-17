@@ -52,4 +52,8 @@ export class Game {
     this.drawDeck.shuffle();
     this.players.delete(playerName);
   }
+
+  playerCount(): number{
+    return this.players.size;
+  }
 }

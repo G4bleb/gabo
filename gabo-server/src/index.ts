@@ -42,7 +42,7 @@ server.ready((err) => {
         roomName: string,
         callback: (result: ErrorCode, message: string) => void
       ) => {
-        console.log("received addPlayer ", playerName, roomName);
+        console.info("addPlayer", playerName, "@", roomName);
         if (sock.data.room !== undefined) {
           callback(ErrorCode.ErrorAlreadyInGame, "You are already in a game.");
         }
@@ -80,10 +80,14 @@ server.ready((err) => {
     sock.on("disconnecting", (reason) => {
       const roomName = sock.data.roomName;
       if(roomName){
-        console.debug("someone disconnected from game", roomName)
+        console.info("disconnecting", sock.data.playerName, "@", roomName)
         const game = state.games.get(roomName);
         game?.removePlayer(sock.data.playerName);
         server.io.to(sock.data.roomName).emit("playerDisconnected", sock.data.playerName);
+        if (game!.playerCount() < 1) {
+          state.games.delete(roomName);
+          console.info("deleted room", roomName)
+        }
       }
     });
 
