@@ -40,13 +40,9 @@
 	};
 </script>
 
-<p>{socketID}</p>
 <div class="text-center">
 	{#if ingame}
 		<div id="gameboard">
-			<div>
-				<p>ingame</p>
-			</div>
 			<div id="hand">
 				{#each cards as card}
 					<div>{card.value}</div>
@@ -55,7 +51,7 @@
 			</div>
 		</div>
 	{:else}
-		<form id="login-form" class="w-100 m-auto" on:submit|preventDefault={joinGame}>
+		<form id="login-form" class="m-auto px-2" on:submit|preventDefault={joinGame}>
 			<h1 class="h1">Un Gabo ?</h1>
 			<input
 				type="text"
@@ -76,6 +72,7 @@
 			<input type="submit" class="btn btn-lg btn-primary btn-block" />
 		</form>
 	{/if}
+	<p class="mt-2 fw-light fs-6">{socketID}</p>
 </div>
 
 <button on:click={sendHello}>send hello</button>
@@ -84,6 +81,11 @@
 	#login-form {
 		display: flex;
 		flex-direction: column;
-		max-width: 20%;
+		
 	}
+	@media (min-width: 768px) { 
+		#login-form{
+			max-width: 30%;
+		}
+	 }
 </style>
