@@ -9,9 +9,7 @@
 	import { CardSvgMap } from '$lib/assets/CardSvgMap';
 
 	export const socket = io('ws://127.0.0.1:8080');
-	export let cards: Card[] = [
-		{value: "KH"}
-	];
+	export let cards: Card[] = [{ value: 'KH' }];
 	export let socketID = '';
 	export let ingame = false;
 	export let nickname = '';
@@ -42,50 +40,50 @@
 	};
 </script>
 
-<h1>{socketID}</h1>
-{#if ingame}
-	<div id="gameboard">
-		<div>
-			<p>ingame</p>
+<p>{socketID}</p>
+<div class="text-center">
+	{#if ingame}
+		<div id="gameboard">
+			<div>
+				<p>ingame</p>
+			</div>
+			<div id="hand">
+				{#each cards as card}
+					<div>{card.value}</div>
+					<img src={CardSvgMap[card.value]} />
+				{/each}
+			</div>
 		</div>
-		<div id="hand">
-		{#each cards as card}
-			<div>{card.value}</div>
-			<img src="{CardSvgMap[card.value]}"/>
-		{/each}
-	</div>
-	</div>
-{:else}
-	<form id="login-form" on:submit|preventDefault={joinGame}>
-		<h1 class="h1">Un Gabo ?</h1>
-		<input
-			type="text"
-			name="nickname"
-			class="form-control"
-			placeholder="Nickname"
-			required
-			bind:value={nickname}
-		/>
-		<input
-			type="text"
-			name="roomcode"
-			class="form-control"
-			placeholder="Room code"
-			required
-			bind:value={roomcode}
-		/>
-		<input type="submit" class="btn btn-lg btn-primary btn-block" />
-	</form>
-{/if}
+	{:else}
+		<form id="login-form" class="w-100 m-auto" on:submit|preventDefault={joinGame}>
+			<h1 class="h1">Un Gabo ?</h1>
+			<input
+				type="text"
+				name="nickname"
+				class="form-control mb-2"
+				placeholder="Nickname"
+				required
+				bind:value={nickname}
+			/>
+			<input
+				type="text"
+				name="roomcode"
+				class="form-control mb-2"
+				placeholder="Room code"
+				required
+				bind:value={roomcode}
+			/>
+			<input type="submit" class="btn btn-lg btn-primary btn-block" />
+		</form>
+	{/if}
+</div>
+
 <button on:click={sendHello}>send hello</button>
 
 <style>
-#login-form {
-    display: block;
-    margin: auto;
-    max-width: 20%;
-}
-#login-form>input {
-    text-align: center;
-}
+	#login-form {
+		display: flex;
+		flex-direction: column;
+		max-width: 20%;
+	}
 </style>
