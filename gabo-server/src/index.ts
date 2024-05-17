@@ -71,10 +71,21 @@ server.ready((err) => {
         }
 
         sock.join(roomName);
-        sock.data.room = roomName;
+        sock.data.roomName = roomName;
+        sock.data.playerName = playerName;
         callback(ErrorCode.Success, "");
       }
     );
+
+    sock.on("disconnecting", (reason) => {
+      const roomName = sock.data.roomName;
+      if(roomName){
+        console.debug("someone disconnected from game", roomName)
+        const game = state.games.get(roomName);
+        game?.removePlayer(sock.data.playerName);
+        server.io.to(sock.data.roomName).emit("playerDisconnected", sock.data.playerName);
+      }
+    });
 
     sock.on("hello", () => {
       console.info("hello", sock.id);

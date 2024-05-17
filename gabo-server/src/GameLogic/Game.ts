@@ -37,5 +37,19 @@ export class Game {
     //Take four cards from deck and assign them to the new player
     //set player id
   }
-  removePlayer() {}
+
+  removePlayer(playerName: string) {
+    if (!this.players.has(playerName)) {
+      throw new Error(
+        "Tried to remove a player that is not in the game"
+      );
+    }
+    const hand = this.players.get(playerName)!.hand;
+    //Leaving player's cards are sent to deck.
+    for(const card of hand.clear()){
+      this.drawDeck.putCardOnTop(card);
+    }
+    this.drawDeck.shuffle();
+    this.players.delete(playerName);
+  }
 }

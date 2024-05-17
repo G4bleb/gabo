@@ -3,8 +3,10 @@ import { Card } from "./Card";
 class Hand {
   private cards: Card[] = [];
 
-  public clear() {
+  public clear(): Card[]{
+    const ret = this.cards
     this.cards = [];
+    return ret;
   }
 }
 
