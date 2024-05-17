@@ -23,7 +23,7 @@ const state = new State();
 
 server.register(FastifySocketIO, {
   cors: {
-    origin: "http://127.0.0.1:5173",
+    origin: "http://localhost:5173",
     methods: ["GET"],
   },
 });

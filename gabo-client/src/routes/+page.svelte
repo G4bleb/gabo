@@ -8,7 +8,7 @@
 	import type { Card } from '$lib/Card.js';
 	import { CardSvgMap } from '$lib/assets/CardSvgMap';
 
-	export const socket = io('ws://127.0.0.1:8080');
+	export const socket = io('ws://localhost:8080');
 	export let cards: Card[] = [{ value: 'KH' }];
 	export let socketID = '';
 	export let ingame = false;
@@ -69,7 +69,12 @@
 				required
 				bind:value={roomcode}
 			/>
-			<input type="submit" class="btn btn-lg btn-primary btn-block" />
+			<input
+				type="submit"
+				name="join-room"
+				value="Join room"
+				class="btn btn-lg btn-primary btn-block"
+			/>
 		</form>
 	{/if}
 	<p class="mt-2 fw-light fs-6">{socketID}</p>
@@ -81,11 +86,10 @@
 	#login-form {
 		display: flex;
 		flex-direction: column;
-		
 	}
-	@media (min-width: 768px) { 
-		#login-form{
+	@media (min-width: 768px) {
+		#login-form {
 			max-width: 30%;
 		}
-	 }
+	}
 </style>
