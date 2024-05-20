@@ -1,3 +1,5 @@
+import { type SerializableClientGame } from "@gabo-common/ClientGame";
+
 export const enum ErrorCode {
   Success,
   ErrorNoRoomAvailable,
@@ -7,9 +9,7 @@ export const enum ErrorCode {
 }
 
 export interface ServerToClientEvents {
-  playerDisconnected: (
-    playerName: string,
-  ) => void;
+  playerDisconnected: (playerName: string) => void;
   //deck shuffling (play animation)
   deckShuffled: () => void;
 
@@ -22,7 +22,11 @@ export interface ClientToServerEvents {
   addPlayer: (
     playerName: string,
     roomName: string,
-    callback: (result: ErrorCode, message: string) => void
+    callback: (
+      result: ErrorCode,
+      message: string,
+      serializedGame: SerializableClientGame | null
+    ) => void
   ) => void;
   //game start button pressed
   startGame: () => void;

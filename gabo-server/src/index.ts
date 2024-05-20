@@ -11,6 +11,7 @@ import { ErrorCode } from "@gabo-common/SocketEvents.js";
 import { State } from "./State";
 import { GaboError } from "./GaboError";
 import { Game } from "./GameLogic/Game";
+import { SerializableClientGame } from "@gabo-common/ClientGame";
 
 const MAX_ROOMS = 100;
 
@@ -40,11 +41,19 @@ server.ready((err) => {
       (
         playerName: string,
         roomName: string,
-        callback: (result: ErrorCode, message: string) => void
+        callback: (
+          result: ErrorCode,
+          message: string,
+          serializedGame: SerializableClientGame | null
+        ) => void
       ) => {
         console.info("addPlayer", playerName, "@", roomName);
         if (sock.data.room !== undefined) {
-          callback(ErrorCode.ErrorAlreadyInGame, "You are already in a game.");
+          callback(
+            ErrorCode.ErrorAlreadyInGame,
+            "You are already in a game.",
+            null
+          );
         }
 
         //If the room already exists, add the player to the game
@@ -54,7 +63,7 @@ server.ready((err) => {
             game.addPlayer(playerName);
           } catch (error) {
             const ge = error as GaboError;
-            callback(ge.code, ge.message);
+            callback(ge.code, ge.message, null);
           }
         } else {
           //The room does not exist
@@ -62,7 +71,8 @@ server.ready((err) => {
           if (state.games.size >= MAX_ROOMS) {
             callback(
               ErrorCode.ErrorNoRoomAvailable,
-              "There is no slot available to create a room."
+              "There is no slot available to create a room.",
+              null
             );
           }
           const game = new Game();
@@ -73,20 +83,26 @@ server.ready((err) => {
         sock.join(roomName);
         sock.data.roomName = roomName;
         sock.data.playerName = playerName;
-        callback(ErrorCode.Success, "");
+        callback(
+          ErrorCode.Success,
+          "",
+          state.games.get(roomName)!.toSerializableClientGame()
+        );
       }
     );
 
     sock.on("disconnecting", (reason) => {
       const roomName = sock.data.roomName;
-      if(roomName){
-        console.info("disconnecting", sock.data.playerName, "@", roomName)
+      if (roomName) {
+        console.info("disconnecting", sock.data.playerName, "@", roomName);
         const game = state.games.get(roomName);
         game?.removePlayer(sock.data.playerName);
-        server.io.to(sock.data.roomName).emit("playerDisconnected", sock.data.playerName);
+        server.io
+          .to(sock.data.roomName)
+          .emit("playerDisconnected", sock.data.playerName);
         if (game!.playerCount() < 1) {
           state.games.delete(roomName);
-          console.info("deleted room", roomName)
+          console.info("deleted room", roomName);
         }
       }
     });

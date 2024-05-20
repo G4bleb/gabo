@@ -1,4 +1,4 @@
-import { Card } from "./Card";
+import type { Card } from "@gabo-common/Card";
 
 export class Deck {
   private cards: Card[] = [];
@@ -27,15 +27,26 @@ export class Deck {
   }
 
   //Remove and return the top card of the deck
-  public draw(): Card {
+  public pop(): Card {
     if (this.cards.length < 1) {
       throw Error("The deck is empty");
     }
     return this.cards.pop() as Card;
   }
 
+  public top(): Card {
+    if (this.cards.length < 1) {
+      throw Error("The deck is empty");
+    }
+    return this.cards[this.cards.length - 1] as Card;
+  }
+
   public putCardOnTop(card: Card) {
     this.cards.push(card);
+  }
+
+  public size(): number {
+    return this.cards.length;
   }
 }
 

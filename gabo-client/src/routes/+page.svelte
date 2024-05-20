@@ -1,31 +1,40 @@
 <script lang="ts">
 	import { io } from 'socket.io-client';
+	import { ErrorCode } from '@gabo-common/SocketEvents.js';
 	import {
-		ErrorCode,
-		type ClientToServerEvents,
-		type ServerToClientEvents
-	} from '@gabo-common/SocketEvents.js';
-	import type { Card } from '$lib/Card.js';
+		type ClientGame,
+		type SerializableClientGame,
+		deserizalizeClientGame
+	} from '@gabo-common/ClientGame';
+	import type { Card } from '@gabo-common/Card';
 	import { CardSvgMap } from '$lib/assets/CardSvgMap';
 
 	export const socket = io('ws://localhost:8080');
 	export let cards: Card[] = [{ value: 'KH' }];
-	export let socketID = '';
+	export let socketID: string | null = null;
 	export let ingame = false;
 	export let nickname = '';
 	export let roomcode = '';
+	export let game: ClientGame | null = null;
 
 	function joinGame() {
 		console.log(nickname, roomcode);
-		socket.emit('addPlayer', nickname, roomcode, (result: ErrorCode, message: string) => {
-			if (result == ErrorCode.Success) {
-				ingame = true;
-			} else {
-				console.error('addPlayer was not successfull');
-				console.error(message);
-				ingame = false;
+		socket.emit(
+			'addPlayer',
+			nickname,
+			roomcode,
+			(result: ErrorCode, message: string, serializedGame: SerializableClientGame | null) => {
+				if (result == ErrorCode.Success) {
+					ingame = true;
+					game = deserizalizeClientGame(serializedGame!);
+					console.log(game);
+				} else {
+					console.error('addPlayer was not successful');
+					console.error(message);
+					ingame = false;
+				}
 			}
-		});
+		);
 	}
 
 	socket.on('connect', () => {
@@ -77,7 +86,7 @@
 			/>
 		</form>
 	{/if}
-	<p class="mt-2 fw-light fs-6">{socketID}</p>
+	<p class="mt-2 fw-light fs-6">{socketID ?? 'Disconnected'}</p>
 </div>
 
 <button on:click={sendHello}>send hello</button>

@@ -2,6 +2,10 @@ import { GaboError } from "../GaboError";
 import { Deck } from "./Deck";
 import { Player } from "./Player";
 import { ErrorCode } from "@gabo-common/SocketEvents";
+import { type SerializableClientGame } from "@gabo-common/ClientGame";
+import { ClientPlayer } from "@gabo-common/ClientPlayer";
+import { ClientDeck } from "@gabo-common/ClientDeck";
+import { CardValues } from "@gabo-common/Card";
 
 export const MAX_PLAYERS = 8;
 
@@ -9,6 +13,10 @@ export class Game {
   private drawDeck: Deck = new Deck();
   private discardDeck: Deck = new Deck();
   private players: Map<string, Player> = new Map();
+
+  constructor() {
+    this.drawDeck.generateCards();
+  }
 
   public start() {
     this.clear();
@@ -40,20 +48,35 @@ export class Game {
 
   removePlayer(playerName: string) {
     if (!this.players.has(playerName)) {
-      throw new Error(
-        "Tried to remove a player that is not in the game"
-      );
+      throw new Error("Tried to remove a player that is not in the game");
     }
     const hand = this.players.get(playerName)!.hand;
     //Leaving player's cards are sent to deck.
-    for(const card of hand.clear()){
+    for (const card of hand.clear()) {
       this.drawDeck.putCardOnTop(card);
     }
     this.drawDeck.shuffle();
     this.players.delete(playerName);
   }
 
-  playerCount(): number{
+  playerCount(): number {
     return this.players.size;
+  }
+
+  toSerializableClientGame(): SerializableClientGame {
+    const drawDeck: ClientDeck = {
+      cardOnTop: this.drawDeck.size() ? { value: CardValues.RED_BACK } : null,
+    };
+
+    const discardDeck: ClientDeck = {
+      cardOnTop: this.discardDeck.size() ? this.discardDeck.top() : null,
+    };
+
+    const players: { key: string; value: ClientPlayer }[] = [];
+    for (const [name, player] of this.players) {
+      players.push({ key: name, value: { handSize: player.hand.size() } });
+    }
+
+    return { drawDeck, discardDeck, players };
   }
 }
