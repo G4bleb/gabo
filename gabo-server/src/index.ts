@@ -96,11 +96,14 @@ server.ready((err) => {
       if (roomName) {
         console.info("disconnecting", sock.data.playerName, "@", roomName);
         const game = state.games.get(roomName);
-        game?.removePlayer(sock.data.playerName);
+        if (!game) {
+          return;
+        }
+        game.removePlayer(sock.data.playerName);
         server.io
           .to(sock.data.roomName)
           .emit("playerDisconnected", sock.data.playerName);
-        if (game!.playerCount() < 1) {
+        if (game.playerCount() < 1) {
           state.games.delete(roomName);
           console.info("deleted room", roomName);
         }
