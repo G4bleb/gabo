@@ -1,4 +1,5 @@
-import { type SerializableClientGame } from "@gabo-common/ClientGame";
+import { type ClientGame } from "@gabo-common/ClientGame";
+import { ClientPlayer } from "./ClientPlayer";
 
 export const enum ErrorCode {
   Success,
@@ -10,6 +11,7 @@ export const enum ErrorCode {
 
 export interface ServerToClientEvents {
   playerDisconnected: (playerName: string) => void;
+  playerConnected: (playerName: string, player: ClientPlayer) => void;
   //deck shuffling (play animation)
   deckShuffled: () => void;
 
@@ -25,7 +27,7 @@ export interface ClientToServerEvents {
     callback: (
       result: ErrorCode,
       message: string,
-      serializedGame: SerializableClientGame | null
+      eventGame: ClientGame | null
     ) => void
   ) => void;
   //game start button pressed

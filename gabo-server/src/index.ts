@@ -11,16 +11,12 @@ import { ErrorCode } from "@gabo-common/SocketEvents.js";
 import { State } from "./State";
 import { GaboError } from "./GaboError";
 import { Game } from "./GameLogic/Game";
-import { SerializableClientGame } from "@gabo-common/ClientGame";
+import { type ClientGame } from "@gabo-common/ClientGame";
 
 const MAX_ROOMS = 100;
 
 const server = Fastify({ logger: true });
 const state = new State();
-
-// server.get("/ping", async (request, reply) => {
-//   return "pong\n";
-// });
 
 server.register(FastifySocketIO, {
   cors: {
@@ -44,7 +40,7 @@ server.ready((err) => {
         callback: (
           result: ErrorCode,
           message: string,
-          serializedGame: SerializableClientGame | null
+          eventGame: ClientGame | null
         ) => void
       ) => {
         console.info("addPlayer", playerName, "@", roomName);
@@ -79,14 +75,18 @@ server.ready((err) => {
           state.games.set(roomName, game);
           game.addPlayer(playerName);
         }
-
-        sock.join(roomName);
+        const game = state.games.get(roomName)!;
+        
         sock.data.roomName = roomName;
         sock.data.playerName = playerName;
+        server.io
+          .to(roomName)
+          .emit("playerConnected", sock.data.playerName, game.getPlayer(playerName).toClientPlayer());
+        sock.join(roomName);
         callback(
           ErrorCode.Success,
           "",
-          state.games.get(roomName)!.toSerializableClientGame()
+          state.games.get(roomName)!.toClientGame()
         );
       }
     );

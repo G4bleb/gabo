@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { io } from 'socket.io-client';
 	import { ErrorCode } from '@gabo-common/SocketEvents.js';
-	import {
-		type ClientGame,
-		type SerializableClientGame,
-		deserizalizeClientGame
-	} from '@gabo-common/ClientGame';
-	import type { Card } from '@gabo-common/Card';
+	import { type ClientGame } from '@gabo-common/ClientGame';
+	import { CardValues, type Card } from '@gabo-common/Card';
 	import { CardSvgMap } from '$lib/assets/CardSvgMap';
 	import { ellipse } from '$lib/ellipse';
 	import type { ClientPlayer } from '@gabo-common/ClientPlayer';
@@ -14,22 +10,20 @@
 	export const socket = io('ws://localhost:8080');
 	export let cards: Card[] = [{ value: 'KH' }];
 	export let socketID: string | null = null;
-  //TODO switch this
-	export let ingame = true; 
+	//TODO switch this
 	export let nickname = '';
-	export let roomcode = '';
+	export let roomcode = 'a';
 	export let game: ClientGame | null = null;
+	export let ingame = false;
 
-	//TODO this is for testing, to be integrated
-	export let tempPlayers: Map<string, ClientPlayer> = new Map();
-	tempPlayers.set('tempPlayer1', { handSize: 1 });
-	tempPlayers.set('tempPlayer2', { handSize: 1 });
-	tempPlayers.set('tempPlayer3', { handSize: 1 });
-	tempPlayers.set('tempPlayer4', { handSize: 1 });
-	export let cardPositions: { top: string; left: string }[] = ellipse(tempPlayers.size, 300, 300);
-	export let currentPlayerIndex: number = Array.from(tempPlayers.keys()).findIndex(
-		(entry: string) => entry === 'tempPlayer3'
-	);
+	export let innerWidth = 0;
+    export let innerHeight = 0;
+
+	let cardPositions: { top: number; left: number }[];
+	$: cardPositions = game ? ellipse(Object.keys(game.players).length, innerWidth/3, innerHeight/3) : [];
+	$: currentPlayerIndex = game
+		? Object.keys(game.players).findIndex((name: string) => name === nickname)
+		: 0;
 
 	function joinGame() {
 		console.log(nickname, roomcode);
@@ -37,11 +31,12 @@
 			'addPlayer',
 			nickname,
 			roomcode,
-			(result: ErrorCode, message: string, serializedGame: SerializableClientGame | null) => {
+			(result: ErrorCode, message: string, eventGame: ClientGame | null) => {
 				if (result == ErrorCode.Success) {
 					ingame = true;
-					game = deserizalizeClientGame(serializedGame!);
+					game = eventGame;
 					console.log(game);
+					registerGameEvents();
 				} else {
 					console.error('addPlayer was not successful');
 					console.error(message);
@@ -49,6 +44,22 @@
 				}
 			}
 		);
+	}
+
+	function registerGameEvents() {
+		socket.on('playerConnected', (playerName: string, player: ClientPlayer) => {
+			console.log('playerConnected', player);
+			if (!game) {
+				throw new Error('playerConnected: game is null');
+			}
+			game.players[playerName] = player;
+		});
+		socket.on('playerDisconnected', (playerName: string) => {
+			console.log('playerDisconnected');
+		});
+		socket.on('deckShuffled', () => {
+			console.log('deckShuffled');
+		});
 	}
 
 	socket.on('connect', () => {
@@ -63,26 +74,33 @@
 	};
 </script>
 
-<div class="text-center">
-	{#if ingame}
-		<div class="bg-dark-subtle">
-			<div id="gameboard" class="mx-auto">
-				{#each tempPlayers.entries() as playerEntry, index}
+<svelte:window bind:innerWidth bind:innerHeight />
+
+<div class="text-center" >
+	{#if ingame && game}
+		<div class="">
+			<div id="gameboard" style:width={`${innerWidth/1.5}px`} style:height={`${innerHeight/1.5}px`} class="bg-dark-subtle position-absolute top-50 start-50 translate-middle overflow-visible">
+				<div class="decks position-absolute top-50 start-50 translate-middle">
+					<img class="card d-inline" src={CardSvgMap[CardValues.RED_BACK]} alt={CardValues.RED_BACK} />
+					<img class="card d-inline" src={CardSvgMap[CardValues.KC]} />
+				</div>
+				
+				{#each Object.entries(game.players) as [playerName, player], index}
 					<div
-						class="position-absolute"
-						style:top={cardPositions[(index + currentPlayerIndex) % cardPositions.length].top}
-						style:left={cardPositions[(index + currentPlayerIndex) % cardPositions.length].left}
+						class="position-absolute translate-middle"
+						style:top={`${cardPositions[(index + currentPlayerIndex) % cardPositions.length].top - 28}px`}
+						style:left={`${cardPositions[(index + currentPlayerIndex) % cardPositions.length].left}px`}
 					>
-						<p>{playerEntry[0]}</p>
-						<img src={CardSvgMap['KH']} />
+						<p class="mb-1">{playerName}</p>
+						<div class="player-hand container px-0">
+							<div class="row row-cols-2 justify-content-center">
+								{#each { length: player.handSize } as _}
+										<img class="col card" src={CardSvgMap[CardValues.RED_BACK]} alt={CardValues.RED_BACK}/>
+								{/each}
+							</div>
+						</div>
 					</div>
 				{/each}
-				<!-- <div id="hand">
-					{#each cards as card}
-						<div>{card.value}</div>
-						<img src={CardSvgMap[card.value]} />
-					{/each}
-				</div> -->
 			</div>
 		</div>
 	{:else}
@@ -113,9 +131,9 @@
 		</form>
 	{/if}
 	<p class="mt-2 fw-light fs-6">{socketID ?? 'Disconnected'}</p>
+	
+<!-- <button on:click={sendHello}>send hello</button> -->
 </div>
-
-<button on:click={sendHello}>send hello</button>
 
 <style>
 	#login-form {
@@ -126,5 +144,19 @@
 		#login-form {
 			max-width: 30%;
 		}
+	}
+	#gameboard {
+		border-radius: 50%;
+		
+	}
+	.decks .card {
+		width: 10rem;
+	}
+	.player-hand {
+		width: 10rem;
+	}
+	.player-hand .card{
+		width: 5rem;
+		padding: 0px;
 	}
 </style>

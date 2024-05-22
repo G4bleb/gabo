@@ -1,7 +1,8 @@
 import { Card } from "@gabo-common/Card";
+import { ClientPlayer } from "@gabo-common/ClientPlayer";
 
 class Hand {
-  private cards: Card[] = [];
+  public cards: Card[] = [];
 
   public clear(): Card[] {
     const ret = this.cards;
@@ -15,9 +16,18 @@ class Hand {
 }
 
 export class Player {
+  public readonly name: string;
   public hand = new Hand();
+
+  constructor(playerName: string){
+    this.name = playerName;
+  }
 
   public clearHand() {
     this.hand.clear();
+  }
+
+  toClientPlayer(): ClientPlayer {
+    return { handSize: this.hand.size() };
   }
 }
