@@ -17,10 +17,12 @@
 	export let ingame = false;
 
 	export let innerWidth = 0;
-    export let innerHeight = 0;
+	export let innerHeight = 0;
 
 	let cardPositions: { top: number; left: number }[];
-	$: cardPositions = game ? ellipse(Object.keys(game.players).length, innerWidth/3, innerHeight/3) : [];
+	$: cardPositions = game
+		? ellipse(Object.keys(game.players).length, innerWidth / 3, innerHeight / 3)
+		: [];
 	$: currentPlayerIndex = game
 		? Object.keys(game.players).findIndex((name: string) => name === nickname)
 		: 0;
@@ -62,6 +64,10 @@
 		});
 	}
 
+	function startGame() {
+		socket.emit('startGame');
+	}
+
 	socket.on('connect', () => {
 		console.log('connected', socket.id);
 		socketID = socket.id as string;
@@ -76,15 +82,42 @@
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
-<div class="text-center" >
+<div class="text-center">
 	{#if ingame && game}
 		<div class="">
-			<div id="gameboard" style:width={`${innerWidth/1.5}px`} style:height={`${innerHeight/1.5}px`} class="bg-dark-subtle position-absolute top-50 start-50 translate-middle overflow-visible">
+			<div
+				id="gameboard"
+				style:width={`${innerWidth / 1.5}px`}
+				style:height={`${innerHeight / 1.5}px`}
+				class="bg-body-tertiary position-absolute top-50 start-50 translate-middle overflow-visible"
+			>
+				{#if !game.started}
+					<div class="start-button position-absolute top-50 start-50 translate-middle z-2">
+						<button type="button" class="btn btn-primary">Start game</button>
+					</div>
+				{/if}
 				<div class="decks position-absolute top-50 start-50 translate-middle">
-					<img class="card d-inline" src={CardSvgMap[CardValues.RED_BACK]} alt={CardValues.RED_BACK} />
-					<img class="card d-inline" src={CardSvgMap[CardValues.KC]} />
+					{#if game.drawDeck.cardOnTop}
+						<img
+							id="drawDeck"
+							class="card d-inline"
+							src={CardSvgMap[game.drawDeck.cardOnTop.value]}
+							alt={game.drawDeck.cardOnTop.value}
+						/>
+					{:else}
+						<div class="card-spot d-inline"></div>
+					{/if}
+					{#if game.discardDeck.cardOnTop}
+						<img
+							class="card d-inline"
+							src={CardSvgMap[game.discardDeck.cardOnTop.value]}
+							alt={game.discardDeck.cardOnTop.value}
+						/>
+					{:else}
+						<div class="card-spot d-inline"></div>
+					{/if}
 				</div>
-				
+
 				{#each Object.entries(game.players) as [playerName, player], index}
 					<div
 						class="position-absolute translate-middle"
@@ -95,7 +128,11 @@
 						<div class="player-hand container px-0">
 							<div class="row row-cols-2 justify-content-center">
 								{#each { length: player.handSize } as _}
-										<img class="col card" src={CardSvgMap[CardValues.RED_BACK]} alt={CardValues.RED_BACK}/>
+									<img
+										class="col card"
+										src={CardSvgMap[CardValues.RED_BACK]}
+										alt={CardValues.RED_BACK}
+									/>
 								{/each}
 							</div>
 						</div>
@@ -129,10 +166,9 @@
 				class="btn btn-lg btn-primary btn-block"
 			/>
 		</form>
+		<p class="mt-2 fw-light fs-6">{socketID ?? 'Disconnected'}</p>
 	{/if}
-	<p class="mt-2 fw-light fs-6">{socketID ?? 'Disconnected'}</p>
-	
-<!-- <button on:click={sendHello}>send hello</button> -->
+	<!-- <button on:click={sendHello}>send hello</button> -->
 </div>
 
 <style>
@@ -147,16 +183,24 @@
 	}
 	#gameboard {
 		border-radius: 50%;
-		
+	}
+	.start-button {
+		padding-bottom: 250px;
 	}
 	.decks .card {
-		width: 10rem;
+		width: 7.5rem;
+	}
+	.decks .card-spot {
+		padding-left: 7.5rem;
 	}
 	.player-hand {
-		width: 10rem;
+		width: 15rem;
 	}
-	.player-hand .card{
-		width: 5rem;
+	.player-hand .card {
+		width: 7.5rem;
 		padding: 0px;
+	}
+	.cursor-pointer {
+		cursor: pointer;
 	}
 </style>
