@@ -14,6 +14,9 @@ export interface ServerToClientEvents {
   playerConnected: (playerName: string, player: ClientPlayer) => void;
   //deck shuffling (play animation)
   deckShuffled: () => void;
+  gameStarted: () => void;
+
+  gaboSaid: (playerName: string) => void;
 
   //TODO example stuff -- to remove
   noArg: () => void;
@@ -32,11 +35,11 @@ export interface ClientToServerEvents {
   ) => void;
   //game start button pressed
   startGame: () => void;
-  //select card (can equal play card if in no context of selection ?)
-  //unselect card
+  playerCardClicked: (playerName: string, cardIndex: string) => void;
+  drawCard: () => void;
+  discardCard: (cardIndex: string) => void;
 
-  //TODO example stuff -- to remove
-  hello: () => void;
+  sayGabo: () => void;
 }
 
 export interface SocketData {}

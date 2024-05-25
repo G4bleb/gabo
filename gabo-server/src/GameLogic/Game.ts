@@ -13,6 +13,7 @@ export class Game {
   private drawDeck: Deck = new Deck();
   private discardDeck: Deck = new Deck();
   private players: Record<string, Player> = {};
+  private started: boolean = false;
 
   constructor() {
     this.drawDeck.generateCards();
@@ -21,9 +22,17 @@ export class Game {
   public start() {
     this.clear();
     this.drawDeck.generateCards();
+    this.drawDeck.shuffle();
     for (const playerName in this.players) {
-      //distributecards
+      for (let i = 0; i < 4; i++) {
+        this.players[playerName].hand.cards.push(this.drawDeck.pop());
+      }
     }
+    this.started = true;
+  }
+
+  public isStarted(): boolean {
+    return this.started;
   }
 
   public clear() {
@@ -41,11 +50,11 @@ export class Game {
         "A player with that name is already in the game."
       );
     }
-    const player = new Player(playerName)
+    const player = new Player(playerName);
     this.players[playerName] = player;
     //Take four cards from deck and assign them to the new player
     for (let i = 0; i < 4; i++) {
-      player.hand.cards.push(this.drawDeck.pop())
+      player.hand.cards.push(this.drawDeck.pop());
     }
   }
 
@@ -89,6 +98,6 @@ export class Game {
 
     const players = this.getClientPlayers();
 
-    return { drawDeck, discardDeck, players };
+    return { drawDeck, discardDeck, players, started: this.started };
   }
 }

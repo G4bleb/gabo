@@ -76,12 +76,16 @@ server.ready((err) => {
           game.addPlayer(playerName);
         }
         const game = state.games.get(roomName)!;
-        
+
         sock.data.roomName = roomName;
         sock.data.playerName = playerName;
         server.io
           .to(roomName)
-          .emit("playerConnected", sock.data.playerName, game.getPlayer(playerName).toClientPlayer());
+          .emit(
+            "playerConnected",
+            sock.data.playerName,
+            game.getPlayer(playerName).toClientPlayer()
+          );
         sock.join(roomName);
         callback(
           ErrorCode.Success,
@@ -108,6 +112,20 @@ server.ready((err) => {
           console.info("deleted room", roomName);
         }
       }
+    });
+
+    sock.on("startGame", () => {
+      const roomName = sock.data.roomName;
+      const game = state.games.get(roomName);
+      if (!game) {
+        sock.emit("error", "Did not find game when trying to start it");
+        return;
+      }
+      if (game.isStarted()) {
+        sock.emit("error", "Tried to start game when it was already started");
+      }
+      game.start();
+      server.io.to(sock.data.roomName).emit("gameStarted");
     });
 
     sock.on("hello", () => {
