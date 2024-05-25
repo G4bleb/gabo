@@ -17,36 +17,23 @@
   export let innerWidth = 0;
   export let innerHeight = 0;
 
+  $: currentPlayerIndex = game ? Object.keys(game.players).findIndex((name: string) => name === nickname) : 0;
   let cardPositions: { top: number; left: number }[];
-  $: cardPositions = game
-    ? ellipse(Object.keys(game.players).length, innerWidth / 3, innerHeight / 3)
-    : [];
-  $: currentPlayerIndex = game
-    ? Object.keys(game.players).findIndex((name: string) => name === nickname)
-    : 0;
-  let shiftedCardPositions: { top: number; left: number }[];
-  $: shiftedCardPositions = cardPositions
-    .slice(-currentPlayerIndex)
-    .concat(cardPositions.slice(0, -currentPlayerIndex));
+  $: cardPositions = game ? ellipse(Object.keys(game.players).length, innerWidth / 3, innerHeight / 3, currentPlayerIndex) : [];
 
   function joinGame() {
     console.log(nickname, roomcode);
-    socket.emit(
-      'addPlayer',
-      nickname,
-      roomcode,
-      (result: ErrorCode, message: string, eventGame: ClientGame | null) => {
-        if (result == ErrorCode.Success) {
-          ingame = true;
-          game = eventGame;
-          registerGameEvents();
-        } else {
-          console.error('addPlayer was not successful');
-          console.error(message);
-          ingame = false;
-        }
+    socket.emit('addPlayer', nickname, roomcode, (result: ErrorCode, message: string, eventGame: ClientGame | null) => {
+      if (result == ErrorCode.Success) {
+        ingame = true;
+        game = eventGame;
+        registerGameEvents();
+      } else {
+        console.error('addPlayer was not successful');
+        console.error(message);
+        ingame = false;
       }
-    );
+    });
   }
 
   function registerGameEvents() {
@@ -56,6 +43,7 @@
         throw new Error('playerConnected: game is null');
       }
       game.players[playerName] = player;
+      console.log(game.players);
     });
     socket.on('playerDisconnected', (playerName: string) => {
       console.log('playerDisconnected');
@@ -64,7 +52,11 @@
       console.log('deckShuffled');
     });
     socket.on('gameStarted', () => {
+      console.log('gameStarted');
       game!.started = true;
+    });
+    socket.on('playerTurn', (playerName: string) => {
+      console.log('playerTurn', playerName);
     });
   }
 
@@ -102,40 +94,23 @@
         {/if}
         <div class="decks position-absolute top-50 start-50 translate-middle">
           {#if game.drawDeck.cardOnTop}
-            <img
-              id="drawDeck"
-              class="card d-inline"
-              src={CardSvgMap[game.drawDeck.cardOnTop.value]}
-              alt={game.drawDeck.cardOnTop.value}
-            />
+            <img id="drawDeck" class="card d-inline" src={CardSvgMap[game.drawDeck.cardOnTop.value]} alt={game.drawDeck.cardOnTop.value} />
           {:else}
             <div class="card-spot d-inline"></div>
           {/if}
           {#if game.discardDeck.cardOnTop}
-            <img
-              class="card d-inline"
-              src={CardSvgMap[game.discardDeck.cardOnTop.value]}
-              alt={game.discardDeck.cardOnTop.value}
-            />
+            <img class="card d-inline" src={CardSvgMap[game.discardDeck.cardOnTop.value]} alt={game.discardDeck.cardOnTop.value} />
           {:else}
             <div class="card-spot d-inline"></div>
           {/if}
         </div>
         {#each Object.entries(game.players) as [playerName, player], index}
-          <div
-            class="position-absolute translate-middle"
-            style:top={`${shiftedCardPositions[index].top - 28}px`}
-            style:left={`${shiftedCardPositions[index].left}px`}
-          >
+          <div class="position-absolute translate-middle" style:top={`${cardPositions[index].top - 28}px`} style:left={`${cardPositions[index].left}px`}>
             <p class="mb-1">{playerName}</p>
             <div class="player-hand container px-0">
               <div class="row row-cols-2 justify-content-center">
                 {#each { length: player.handSize } as _}
-                  <img
-                    class="col card"
-                    src={CardSvgMap[CardValues.RED_BACK]}
-                    alt={CardValues.RED_BACK}
-                  />
+                  <img class="col card" src={CardSvgMap[CardValues.RED_BACK]} alt={CardValues.RED_BACK} />
                 {/each}
               </div>
             </div>
@@ -149,28 +124,9 @@
   {:else}
     <form id="login-form" class="m-auto px-2" on:submit|preventDefault={joinGame}>
       <h1 class="h1">Un Gabo ?</h1>
-      <input
-        type="text"
-        name="nickname"
-        class="form-control mb-2"
-        placeholder="Nickname"
-        required
-        bind:value={nickname}
-      />
-      <input
-        type="text"
-        name="roomcode"
-        class="form-control mb-2"
-        placeholder="Room code"
-        required
-        bind:value={roomcode}
-      />
-      <input
-        type="submit"
-        name="join-room"
-        value="Join room"
-        class="btn btn-lg btn-primary btn-block"
-      />
+      <input type="text" name="nickname" class="form-control mb-2" placeholder="Nickname" required bind:value={nickname} />
+      <input type="text" name="roomcode" class="form-control mb-2" placeholder="Room code" required bind:value={roomcode} />
+      <input type="submit" name="join-room" value="Join room" class="btn btn-lg btn-primary btn-block" />
     </form>
     <p class="mt-2 fw-light fs-6">{socketID ?? 'Disconnected'}</p>
   {/if}
