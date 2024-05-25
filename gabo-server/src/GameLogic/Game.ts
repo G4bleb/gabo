@@ -14,6 +14,7 @@ export class Game {
   private discardDeck: Deck = new Deck();
   private players: Record<string, Player> = {};
   private started: boolean = false;
+  private playerInTurn: string = "";
 
   constructor() {
     this.drawDeck.generateCards();
@@ -29,6 +30,7 @@ export class Game {
       }
     }
     this.started = true;
+    this.nextTurn();
   }
 
   public isStarted(): boolean {
@@ -99,5 +101,32 @@ export class Game {
     const players = this.getClientPlayers();
 
     return { drawDeck, discardDeck, players, started: this.started };
+  }
+
+  public nextTurn() {
+    const playerNames = Object.keys(this.players);
+    if (!this.playerInTurn) {
+      this.playerInTurn =
+        playerNames[Math.floor(Math.random() * playerNames.length)];
+      return;
+    }
+
+    let nextPlayerShouldPlay = false;
+    for (const playerName in this.players) {
+      if (nextPlayerShouldPlay) {
+        this.playerInTurn = playerName;
+        return;
+      }
+      if (this.playerInTurn === playerName) {
+        nextPlayerShouldPlay = true;
+      }
+    }
+    if (nextPlayerShouldPlay) {
+      this.playerInTurn = playerNames[0];
+    }
+  }
+
+  public whoIsPlaying() {
+    return this.playerInTurn;
   }
 }

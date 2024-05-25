@@ -1,12 +1,13 @@
-import { type ClientGame } from "@gabo-common/ClientGame";
+import { type ClientGame } from "./ClientGame";
 import { ClientPlayer } from "./ClientPlayer";
 
 export const enum ErrorCode {
-  Success,
-  ErrorNoRoomAvailable,
-  ErrorNameUnavailable,
-  ErrorAlreadyInGame,
-  ErrorRoomFull,
+  Success = "Success",
+  ErrorNoRoomAvailable = "ErrorNoRoomAvailable",
+  ErrorNameUnavailable = "ErrorNameUnavailable",
+  ErrorAlreadyInGame = "ErrorAlreadyInGame",
+  ErrorRoomFull = "ErrorRoomFull",
+  ErrorInvalidName = "ErrorInvalidName",
 }
 
 export interface ServerToClientEvents {
@@ -17,6 +18,8 @@ export interface ServerToClientEvents {
   gameStarted: () => void;
 
   gaboSaid: (playerName: string) => void;
+
+  playerTurn: (playerName: string) => void;
 
   //TODO example stuff -- to remove
   noArg: () => void;

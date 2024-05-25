@@ -44,6 +44,14 @@ server.ready((err) => {
         ) => void
       ) => {
         console.info("addPlayer", playerName, "@", roomName);
+        if (!playerName) {
+          callback(
+            ErrorCode.ErrorInvalidName,
+            "You must have a valid name.",
+            null
+          );
+        }
+
         if (sock.data.room !== undefined) {
           callback(
             ErrorCode.ErrorAlreadyInGame,
@@ -126,6 +134,7 @@ server.ready((err) => {
       }
       game.start();
       server.io.to(sock.data.roomName).emit("gameStarted");
+      server.io.to(sock.data.roomName).emit("playerTurn", game.whoIsPlaying());
     });
 
     sock.on("hello", () => {
