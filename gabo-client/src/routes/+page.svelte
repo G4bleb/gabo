@@ -8,9 +8,7 @@
   import type { ClientPlayer } from '@gabo-common/ClientPlayer';
 
   export const socket = io('ws://localhost:8080');
-  export let cards: Card[] = [{ value: 'KH' }];
   export let socketID: string | null = null;
-  //TODO switch this
   export let nickname = '';
   export let roomcode = 'a';
   export let game: ClientGame | null = null;
@@ -26,6 +24,10 @@
   $: currentPlayerIndex = game
     ? Object.keys(game.players).findIndex((name: string) => name === nickname)
     : 0;
+  let shiftedCardPositions: { top: number; left: number }[];
+  $: shiftedCardPositions = cardPositions
+    .slice(-currentPlayerIndex)
+    .concat(cardPositions.slice(0, -currentPlayerIndex));
 
   function joinGame() {
     console.log(nickname, roomcode);
@@ -37,7 +39,6 @@
         if (result == ErrorCode.Success) {
           ingame = true;
           game = eventGame;
-          console.log(game);
           registerGameEvents();
         } else {
           console.error('addPlayer was not successful');
@@ -61,6 +62,9 @@
     });
     socket.on('deckShuffled', () => {
       console.log('deckShuffled');
+    });
+    socket.on('gameStarted', () => {
+      game!.started = true;
     });
   }
 
@@ -93,7 +97,7 @@
       >
         {#if !game.started}
           <div class="start-button position-absolute top-50 start-50 translate-middle z-2">
-            <button type="button" class="btn btn-primary">Start game</button>
+            <button type="button" on:click={startGame} class="btn btn-primary">Start game</button>
           </div>
         {/if}
         <div class="decks position-absolute top-50 start-50 translate-middle">
@@ -117,12 +121,11 @@
             <div class="card-spot d-inline"></div>
           {/if}
         </div>
-
         {#each Object.entries(game.players) as [playerName, player], index}
           <div
             class="position-absolute translate-middle"
-            style:top={`${cardPositions[(index + currentPlayerIndex) % cardPositions.length].top - 28}px`}
-            style:left={`${cardPositions[(index + currentPlayerIndex) % cardPositions.length].left}px`}
+            style:top={`${shiftedCardPositions[index].top - 28}px`}
+            style:left={`${shiftedCardPositions[index].left}px`}
           >
             <p class="mb-1">{playerName}</p>
             <div class="player-hand container px-0">
@@ -136,6 +139,9 @@
                 {/each}
               </div>
             </div>
+            {#if index === currentPlayerIndex}
+              <button type="button" class="btn btn-primary mt-1">Say Gabo</button>
+            {/if}
           </div>
         {/each}
       </div>
