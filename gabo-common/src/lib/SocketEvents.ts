@@ -2,7 +2,6 @@ import { type ClientGame } from "./ClientGame";
 import { ClientPlayer } from "./ClientPlayer";
 
 export const enum ErrorCode {
-  Success = "Success",
   ErrorNoRoomAvailable = "ErrorNoRoomAvailable",
   ErrorNameUnavailable = "ErrorNameUnavailable",
   ErrorAlreadyInGame = "ErrorAlreadyInGame",
@@ -35,7 +34,13 @@ export interface ClientToServerEvents {
   ) => void;
   //game start button pressed
   startGame: () => void;
-  playerCardClicked: (playerName: string, cardIndex: string) => void;
+  showPlayerCard: (playerName: string, cardIndex: string) => void;
+  swapPlayerCards: (
+    playerName1: string,
+    cardIndex1: string,
+    playerName2: string,
+    cardIndex2: string
+  ) => void;
   drawCard: () => void;
   discardCard: (cardIndex: string) => void;
 
