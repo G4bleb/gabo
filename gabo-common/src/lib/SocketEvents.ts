@@ -30,11 +30,8 @@ export interface ClientToServerEvents {
   addPlayer: (
     playerName: string,
     roomName: string,
-    callback: (
-      result: ErrorCode,
-      message: string,
-      eventGame: ClientGame | null
-    ) => void
+    onSuccess: (eventGame: ClientGame) => void,
+    onError: (error: ErrorCode, message: string) => void
   ) => void;
   //game start button pressed
   startGame: () => void;

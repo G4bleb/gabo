@@ -37,27 +37,16 @@ server.ready((err) => {
       (
         playerName: string,
         roomName: string,
-        callback: (
-          result: ErrorCode,
-          message: string,
-          eventGame: ClientGame | null
-        ) => void
+        onSuccess: (eventGame: ClientGame) => void,
+        onError: (error: ErrorCode, message: string) => void
       ) => {
         console.info("addPlayer", playerName, "@", roomName);
         if (!playerName) {
-          callback(
-            ErrorCode.ErrorInvalidName,
-            "You must have a valid name.",
-            null
-          );
+          onError(ErrorCode.ErrorInvalidName, "You must have a valid name.");
         }
 
         if (sock.data.room !== undefined) {
-          callback(
-            ErrorCode.ErrorAlreadyInGame,
-            "You are already in a game.",
-            null
-          );
+          onError(ErrorCode.ErrorAlreadyInGame, "You are already in a game.");
         }
 
         //If the room already exists, add the player to the game
@@ -67,16 +56,15 @@ server.ready((err) => {
             game.addPlayer(playerName);
           } catch (error) {
             const ge = error as GaboError;
-            callback(ge.code, ge.message, null);
+            onError(ge.code, ge.message);
           }
         } else {
           //The room does not exist
           //Check if room is createable
           if (state.games.size >= MAX_ROOMS) {
-            callback(
+            onError(
               ErrorCode.ErrorNoRoomAvailable,
-              "There is no slot available to create a room.",
-              null
+              "There is no slot available to create a room."
             );
           }
           const game = new Game();
@@ -95,11 +83,7 @@ server.ready((err) => {
             game.getPlayer(playerName).toClientPlayer()
           );
         sock.join(roomName);
-        callback(
-          ErrorCode.Success,
-          "",
-          state.games.get(roomName)!.toClientGame()
-        );
+        onSuccess(state.games.get(roomName)!.toClientGame());
       }
     );
 

@@ -23,17 +23,21 @@
 
   function joinGame() {
     console.log(nickname, roomcode);
-    socket.emit('addPlayer', nickname, roomcode, (result: ErrorCode, message: string, eventGame: ClientGame | null) => {
-      if (result == ErrorCode.Success) {
+    socket.emit(
+      'addPlayer',
+      nickname,
+      roomcode,
+      (eventGame: ClientGame) => {
         ingame = true;
         game = eventGame;
         registerGameEvents();
-      } else {
+      },
+      (error: ErrorCode, message: string) => {
         console.error('addPlayer was not successful');
-        console.error(message);
+        console.error(error, message);
         ingame = false;
       }
-    });
+    );
   }
 
   function registerGameEvents() {
