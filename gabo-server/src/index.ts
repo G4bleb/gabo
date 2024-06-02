@@ -37,16 +37,23 @@ server.ready((err) => {
       (
         playerName: string,
         roomName: string,
-        onSuccess: (eventGame: ClientGame) => void,
-        onError: (error: ErrorCode, message: string) => void
+        onSuccess: (eventGame: ClientGame) => void
       ) => {
         console.info("addPlayer", playerName, "@", roomName);
         if (!playerName) {
-          onError(ErrorCode.ErrorInvalidName, "You must have a valid name.");
+          sock.emit(
+            "error",
+            ErrorCode.ErrorInvalidName,
+            "You must have a valid name."
+          );
         }
 
         if (sock.data.room !== undefined) {
-          onError(ErrorCode.ErrorAlreadyInGame, "You are already in a game.");
+          sock.emit(
+            "error",
+            ErrorCode.ErrorAlreadyInGame,
+            "You are already in a game."
+          );
         }
 
         //If the room already exists, add the player to the game
@@ -56,13 +63,14 @@ server.ready((err) => {
             game.addPlayer(playerName);
           } catch (error) {
             const ge = error as GaboError;
-            onError(ge.code, ge.message);
+            sock.emit("error", ge.code, ge.message);
           }
         } else {
           //The room does not exist
           //Check if room is createable
           if (state.games.size >= MAX_ROOMS) {
-            onError(
+            sock.emit(
+              "error",
               ErrorCode.ErrorNoRoomAvailable,
               "There is no slot available to create a room."
             );
@@ -95,7 +103,14 @@ server.ready((err) => {
         if (!game) {
           return;
         }
-        game.removePlayer(sock.data.playerName);
+
+        try {
+          game.removePlayer(sock.data.playerName);
+        } catch (error) {
+          console.error((error as Error).message);
+          return;
+        }
+
         server.io
           .to(sock.data.roomName)
           .emit("playerDisconnected", sock.data.playerName);
@@ -115,6 +130,7 @@ server.ready((err) => {
       }
       if (game.isStarted()) {
         sock.emit("error", "Tried to start game when it was already started");
+        return;
       }
       game.start();
       server.io.to(sock.data.roomName).emit("gameStarted");

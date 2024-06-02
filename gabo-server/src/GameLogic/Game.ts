@@ -100,7 +100,13 @@ export class Game {
 
     const players = this.getClientPlayers();
 
-    return { drawDeck, discardDeck, players, started: this.started };
+    return {
+      drawDeck,
+      discardDeck,
+      players,
+      started: this.started,
+      playerInTurn: this.playerInTurn,
+    };
   }
 
   public nextTurn() {

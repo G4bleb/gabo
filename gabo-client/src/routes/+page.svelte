@@ -12,10 +12,16 @@
   export let nickname = '';
   export let roomcode = 'a';
   export let game: ClientGame | null = null;
-  export let ingame = false;
+  $: onGameboard = !!game;
+  $: inGame = game && game.started;
+
+  export let whoami: string = '';
+  $: myTurn = onGameboard && whoami === game?.playerInTurn;
 
   export let innerWidth = 0;
   export let innerHeight = 0;
+
+  export let gameStatus = ' ';
 
   $: currentPlayerIndex = game ? Object.keys(game.players).findIndex((name: string) => name === nickname) : 0;
   let cardPositions: { top: number; left: number }[];
@@ -23,21 +29,16 @@
 
   function joinGame() {
     console.log(nickname, roomcode);
-    socket.emit(
-      'addPlayer',
-      nickname,
-      roomcode,
-      (eventGame: ClientGame) => {
-        ingame = true;
-        game = eventGame;
-        registerGameEvents();
-      },
-      (error: ErrorCode, message: string) => {
-        console.error('addPlayer was not successful');
-        console.error(error, message);
-        ingame = false;
+    socket.emit('addPlayer', nickname, roomcode, (eventGame: ClientGame) => {
+      game = eventGame;
+      if (!game.started) {
+        gameStatus = 'Waiting for the game to start';
+      } else if (game.playerInTurn) {
+        gameStatus = `${game.playerInTurn}'s turn`;
       }
-    );
+      whoami = nickname;
+      registerGameEvents();
+    });
   }
 
   function registerGameEvents() {
@@ -61,6 +62,8 @@
     });
     socket.on('playerTurn', (playerName: string) => {
       console.log('playerTurn', playerName);
+      game!.playerInTurn = playerName;
+      gameStatus = `${game!.playerInTurn}'s turn`;
     });
   }
 
@@ -72,18 +75,33 @@
     console.log('connected', socket.id);
     socketID = socket.id as string;
   });
+  socket.on('error', (code: ErrorCode, message: string) => {
+    console.error(code, message);
+  });
   socket.on('noArg', () => {
     console.log('noArg', socket.id);
   });
   export const sendHello = () => {
     socket.emit('hello');
   };
+
+  function playerCardClicked(playerName: string, cardIndex: number) {
+    console.log('card clicked', playerName, cardIndex);
+  }
+
+  function drawDeckClicked() {
+    console.log('drawDeckClicked');
+  }
+
+  function discardDeckClicked() {
+    console.log('discardDeckClicked');
+  }
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
 
 <div class="text-center">
-  {#if ingame && game}
+  {#if onGameboard && game}
     <div class="">
       <div
         id="gameboard"
@@ -91,19 +109,50 @@
         style:height={`${innerHeight / 1.5}px`}
         class="bg-body-tertiary position-absolute top-50 start-50 translate-middle overflow-visible"
       >
-        {#if !game.started}
-          <div class="start-button position-absolute top-50 start-50 translate-middle z-2">
-            <button type="button" on:click={startGame} class="btn btn-primary">Start game</button>
-          </div>
-        {/if}
+        <div class="status-bar position-absolute top-50 start-50 z-2">
+          <div class="game-status alert alert-secondary">{gameStatus}</div>
+          {#if !game.started}
+            <div class="start-button">
+              <button type="button" on:click={startGame} class="btn btn-primary">Start game</button>
+            </div>
+          {/if}
+        </div>
         <div class="decks position-absolute top-50 start-50 translate-middle">
           {#if game.drawDeck.cardOnTop}
-            <img id="drawDeck" class="card d-inline" src={CardSvgMap[game.drawDeck.cardOnTop.value]} alt={game.drawDeck.cardOnTop.value} />
+            <button
+              on:click={() => {
+                drawDeckClicked();
+              }}
+              on:keydown={() => {
+                drawDeckClicked();
+              }}
+              class:cursor-pointer={myTurn}
+              class="cursor-default border-0 p-0 bg-transparent"
+            >
+              <img
+                id="drawDeck"
+                class="card d-inline"
+                class:cursor-pointer={myTurn}
+                src={CardSvgMap[game.drawDeck.cardOnTop.value]}
+                alt={game.drawDeck.cardOnTop.value}
+              />
+            </button>
           {:else}
             <div class="card-spot d-inline"></div>
           {/if}
           {#if game.discardDeck.cardOnTop}
-            <img class="card d-inline" src={CardSvgMap[game.discardDeck.cardOnTop.value]} alt={game.discardDeck.cardOnTop.value} />
+            <button
+              on:click={() => {
+                discardDeckClicked();
+              }}
+              on:keydown={() => {
+                discardDeckClicked();
+              }}
+              class:cursor-pointer={myTurn}
+              class="cursor-default border-0 p-0 bg-transparent"
+            >
+              <img class="card d-inline" src={CardSvgMap[game.discardDeck.cardOnTop.value]} alt={game.discardDeck.cardOnTop.value} />
+            </button>
           {:else}
             <div class="card-spot d-inline"></div>
           {/if}
@@ -112,9 +161,22 @@
           <div class="position-absolute translate-middle" style:top={`${cardPositions[index].top - 28}px`} style:left={`${cardPositions[index].left}px`}>
             <p class="mb-1">{playerName}</p>
             <div class="player-hand container px-0">
-              <div class="row row-cols-2 justify-content-center">
-                {#each { length: player.handSize } as _}
-                  <img class="col card" src={CardSvgMap[CardValues.RED_BACK]} alt={CardValues.RED_BACK} />
+              <div class="row row-cols-2 justify-content-center mx-0">
+                {#each { length: player.handSize } as _, i}
+                  <div class="px-0">
+                    <button
+                      on:click={() => {
+                        playerCardClicked(playerName, i);
+                      }}
+                      on:keydown={() => {
+                        playerCardClicked(playerName, i);
+                      }}
+                      class:cursor-pointer={inGame && whoami === playerName}
+                      class="cursor-default border-0 p-0 bg-transparent"
+                    >
+                      <img class="col card" src={CardSvgMap[CardValues.RED_BACK]} alt={CardValues.RED_BACK} />
+                    </button>
+                  </div>
                 {/each}
               </div>
             </div>
@@ -151,7 +213,13 @@
     border-radius: 50%;
   }
   .start-button {
-    padding-bottom: 250px;
+    padding-bottom: 0px;
+  }
+  .status-bar {
+    transform: translate(-50%, -12.5rem);
+  }
+  .game-status {
+    margin-bottom: 0.5rem;
   }
   .decks .card {
     width: 7.5rem;
@@ -167,6 +235,9 @@
     padding: 0px;
   }
   .cursor-pointer {
-    cursor: pointer;
+    cursor: pointer !important;
+  }
+  .cursor-default {
+    cursor: default;
   }
 </style>

@@ -6,4 +6,5 @@ export interface ClientGame {
   discardDeck: ClientDeck;
   players: Record<string, ClientPlayer>;
   started: boolean;
+  playerInTurn: string;
 }
